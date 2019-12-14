@@ -1,3 +1,9 @@
+2019.12.15
+1.安装了pyqt (pip install pyqt    pip install pyqt-tools)   https://www.bilibili.com/video/av54310770
+2.安装了pymysql (pip install pymysql)
+3.安装mysql8.0.18(不建议使用msi安装因为无法选择安装路径只能安在C，别问我怎么知道的)
+
+
 2019.12.14
 用于完成计算机网络的作业（之后你们还想接着做也OK反正挺好玩）。
 注意事项：
