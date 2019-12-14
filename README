@@ -1,6 +1,6 @@
 2019.12.14
 用于完成计算机网络的作业（之后你们还想接着做也OK反正挺好玩）。
 注意事项：
-1.拟使用python socket + Qt for python +  Mysql完成
+1.拟使用python socket + Qt for python +  Mysql完成(估计用不上）
 2.变量名使用下划线区分（eg. client_socket_reuse）
 3.操作符两边用空格间隔(eg. int i = 123    c = a & b)
