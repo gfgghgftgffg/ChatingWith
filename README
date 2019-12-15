@@ -1,3 +1,8 @@
+2019.12.16
+1.使用QtDesigner画图，感觉不如tkinter方便。感觉后续需要使用代码操作或者使用tkinter
+2.server now can store nickname(try use theading but failed yet).
+
+
 2019.12.15
 1.安装了pyqt (pip install pyqt    pip install pyqt-tools)   https://www.bilibili.com/video/av54310770
 2.安装了pymysql (pip install pymysql)
