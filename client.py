@@ -1,8 +1,8 @@
 import socket
 import sys
 import threading
-from PyQt5.QtWidgets import QApplication,QMainWindow
-import loginWindow
+from PyQt5.QtWidgets import QApplication,QMainWindow,QWidget
+import window
 import msgList
 
 def login():
@@ -37,10 +37,8 @@ def send_chating_msg(client_socket):
 #Program starts here!
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    LOGIN_WINDOW = QMainWindow()
-    loginWindow.Ui_MainWindow().setupUi(LOGIN_WINDOW)
+    LOGIN_WINDOW = window.loginWindow()
     LOGIN_WINDOW.show()
-
     sys.exit(app.exec_())
 
     SERVER_ADDR = ("127.0.0.1", 7798)
