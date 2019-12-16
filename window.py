@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
+from PyQt5 import QtCore, QtGui, QtWidgets, Qt
 
-
-from PyQt5 import QtCore, QtGui, QtWidgets
-
-        
+def output_msg(one_msg):
+    return one_msg
 
 class loginWindow(QtWidgets.QWidget):
     def __init__(self):
@@ -18,13 +17,15 @@ class loginWindow(QtWidgets.QWidget):
         newLeft = (screen.width() - window_size_width) / 2
         newTop = (screen.height() - window_size_height) / 2
         self.move(newLeft,newTop)
+        self.setMinimumSize(600,500)
+        self.setWindowFlags(Qt.Qt.FramelessWindowHint)
 
         self.setupUI()
 
     
     def setupUI(self):
         size = self.geometry()
-
+        
         label_1 = QtWidgets.QLabel(self)
         label_1.setText("昵称")
         label_1.move(size.width() * 2 / 10, size.height() * 1 / 10)
@@ -40,13 +41,48 @@ class loginWindow(QtWidgets.QWidget):
         button_1.setText("退出")
         button_1.move(size.width() * 2 / 3, size.height() * 4 / 5)
         button_1.clicked.connect(self.close)
+
+        text_nickname = QtWidgets.QLineEdit(self)
+        text_nickname.move(size.width() * 2 / 10 + 50, size.height() * 1 / 10 - 5)
         button_2 = QtWidgets.QPushButton(self)
         button_2.setText("登录")
         button_2.move(size.width() * 1 / 5, size.height() * 4 / 5)
-        button_2.clicked.connect(self.submit)
-    
-    def submit(self):
-        pass
+        #button_2.setEnabled(False)
+        button_2.clicked.connect(lambda : self.submit(text_nickname))
+
+        self.label_hint = QtWidgets.QLabel(self)
+        self.label_hint.setText("12333")
+        self.label_hint.move(size.width() * 9 / 20, size.height() * 9 / 10)
+        self.label_hint.show()
+
+
+        
+    def submit(self, text_nickname):
+        nickname = text_nickname.text()
+        if nickname == "":
+            self.label_hint.setText("Nickname can' be empty")
+            return
+        output_msg(nickname)
+
+    def mousePressEvent(self, QMouseEvent):
+        if QMouseEvent.buttons() == Qt.Qt.LeftButton:
+            self.move_window = True
+            self.cursor_pos_1 = Qt.QCursor.pos()
+            self.pos = self.geometry()
+            #print(self.cursor_pos_1.x(),self.cursor_pos_1.y())
+
+    def mouseMoveEvent(self, QMouseEvent):
+        if self.move_window:   
+            self.cursor_pos_2 = Qt.QCursor.pos()
+            #print(self.cursor_pos_2.x(),self.cursor_pos_2.y())
+            new_left = self.cursor_pos_2.x() - self.cursor_pos_1.x() + self.pos.left()
+            new_top = self.cursor_pos_2.y() - self.cursor_pos_1.y() + self.pos.top()
+            self.move(new_left,new_top)
+
+    def mouseReleaseEvent(self, QMouseEvent):
+        if self.move_window:
+            self.move_window = False
+
     
     
     
