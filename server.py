@@ -3,7 +3,7 @@ import threading
 import msgList
 
 def try_login(client_socket):
-    client_socket.send("111".encode("utf8"))
+    #client_socket.send("111".encode("utf8"))
     while True:
         recv_data = client_socket.recv(1024)
 
