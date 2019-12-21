@@ -1,40 +1,121 @@
 import socket
 import threading
 import msgList
+import queue
+import json
 
-def try_login(client_socket):
-    #client_socket.send("111".encode("utf8"))
-    while True:
-        recv_data = client_socket.recv(1024)
+LOGIN_NAME_LIST = []
+USER_POOL = []
+onlineList = []
+LOGIN_NAME_LIST = []#only login nickname
+lock = threading.Lock()
+msgque = queue.Queue()#msg queue
+port = 7798
 
-        if recv_data:
-            if len(USER_POOL) >= 128:
-                client_socket.send(msgList.err_service_full.encode("utf8"))
-            data = recv_data.decode("utf8")
-            if data in LOGIN_NAME_LIST:
-                client_socket.send(msgList.err_existedNickName.encode("utf8"))
+
+class Chat(threading.Thread):
+    def __init__(self,port):
+        threading.Thread.__init__(self)
+        self.sock = ('',port)
+        self.socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+    
+    def run(self):
+        self.socket.bind(self.sock)
+        self.socket.listen(16)
+        send = threading.Thread(target=self.senddata)
+        send.start()
+        while True:
+            client,clientSock = self.socket.accept()
+            t = threading.Thread(target=self.tcp_connect,args=[client])
+            USER_POOL.append(t)#客户加入线程池
+            t.start()
+                
+
+    def tcp_connect(self,client):
+        (status,username) = self.try_login(client)
+        if status == "succ":
+            try:
+                while True:
+                    data = client.recv(1024)
+                    data = json.loads(data.decode())
+                    print('receive message',data)
+                    self.putMsgToQue(data)
+
+            except:
+                print(username,'Disconnect')
+                index = 0
+                for user in onlineList:
+                    if user[0] == client:
+                        onlineList.pop(index)#将此用户移除在线用户列表
+                        LOGIN_NAME_LIST = self.flushUsernames()#刷新用户名列表
+                        USER_POOL.pop(index)
+                        data = ("ALL", LOGIN_NAME_LIST, "USERNAME_LIST")
+                        self.putMsgToQue(data)#将用户名列表放入消息队列
+                    index = index + 1
+    
+    def try_login(self,client_socket):
+        global LOGIN_NAME_LIST
+        username = client_socket.recv(1024)
+        username = username.decode()
+
+        if username:
+            if len(USER_POOL) >= 16:
+                data = (client_socket, msgList.err_service_full, "SERVER_HINT")
+                self.putMsgToQue(data)
+                return ("fail","")
+            elif username in LOGIN_NAME_LIST:
+                data = (client_socket, msgList.err_existedNickName, "SERVER_HINT")
+                self.putMsgToQue(data)
+                return ("fail","")
+            #can login
             else:
-                LOGIN_NAME_LIST.append(data)
-                client_socket.send(msgList.login_succ.encode("utf8"))
-                print(LOGIN_NAME_LIST)
+                onlineList.append((client_socket, username))
+                LOGIN_NAME_LIST = self.flushUsernames()
+                data = (client_socket, msgList.login_succ, "SERVER_HINT")
+                self.putMsgToQue(data)
+                data = (client_socket,LOGIN_NAME_LIST,"USERNAME_LIST")
+                self.putMsgToQue(data)
+                return ("succ",username)
+    
+    #Update LOGIN_NAME_LIST
+    def flushUsernames(self):
+        LOGIN_NAME_LIST = []
+        for i in onlineList:
+            LOGIN_NAME_LIST.append(i[1])
+        return LOGIN_NAME_LIST
 
-        else:
-            break
-    print("Disconnect")
-    client_socket.close()
+    def putMsgToQue(self,msg): #将消息和ip以及端口填入队列
+        lock.acquire()
+        try:
+            msgque.put(msg)
+        finally:
+            lock.release()
+
+    #send msg while msg_queue not empty
+    def senddata(self):
+        while True:
+            if not msgque.empty():
+                message = msgque.get()
+                messageaH = {}
+                if message[2] == "SERVER_HINT":
+                    messageaH = {'type':'SERVER_HINT','message':message[1]}
+                    message[0].send(json.dumps(messageaH).encode())
+                    continue
+
+                for user in onlineList:
+                    try:
+                        if message[0] == "ALL":
+                            user[0].send(json.dumps(messageaH).encode())
+                        else:
+                            user[0].send(json.dumps(messageaH).encode())
+                    except:
+                        print('no user or message to send')
 
 
 #Program starts here!
-SERVER_ADDR = ("127.0.0.1", 7798)
-LOGIN_NAME_LIST = []
-USER_POOL = []
-
-server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-server_socket.bind(SERVER_ADDR)
-server_socket.listen(128)
-
-while True:
-    client_socket, client_addr = server_socket.accept()
-    new_thread = threading.Thread(target=try_login, args=([client_socket]))
-    USER_POOL.append(new_thread)
-    new_thread.start()
+#chat file 使用不同的sock连接
+chatserver = Chat(port)
+chatserver.start()
+number = len(LOGIN_NAME_LIST)
+while number != len(LOGIN_NAME_LIST):
+    print(LOGIN_NAME_LIST)
