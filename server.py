@@ -59,6 +59,7 @@ class Chat(threading.Thread):
         username = username.decode()
 
         if username:
+            print("RECV:",username)
             if len(USER_POOL) >= 16:
                 data = (client_socket, msgList.err_service_full, "SERVER_HINT")
                 self.putMsgToQue(data)
@@ -98,6 +99,7 @@ class Chat(threading.Thread):
                 message = msgque.get()
                 messageaH = {}
                 if message[2] == "SERVER_HINT":
+                    print(message)
                     messageaH = {'type':'SERVER_HINT','message':message[1]}
                     message[0].send(json.dumps(messageaH).encode())
                     continue
