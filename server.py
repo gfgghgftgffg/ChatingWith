@@ -32,26 +32,29 @@ class Chat(threading.Thread):
                 
 
     def tcp_connect(self,client):
-        (status,username) = self.try_login(client)
-        if status == "succ":
-            try:
-                while True:
-                    data = client.recv(1024)
-                    data = json.loads(data.decode())
-                    print('receive message',data)
-                    self.putMsgToQue(data)
+        while True:
+            global LOGIN_NAME_LIST
+            (status,username) = self.try_login(client)
+            if status == "succ":
+                try:
+                    while True:
+                        data = client.recv(1024)
+                        data = json.loads(data.decode())
+                        print('receive message',data)
+                        self.putMsgToQue(data)
 
-            except:
-                print(username,'Disconnect')
-                index = 0
-                for user in onlineList:
-                    if user[0] == client:
-                        onlineList.pop(index)#将此用户移除在线用户列表
-                        LOGIN_NAME_LIST = self.flushUsernames()#刷新用户名列表
-                        USER_POOL.pop(index)
-                        data = ("ALL", LOGIN_NAME_LIST, "USERNAME_LIST")
-                        self.putMsgToQue(data)#将用户名列表放入消息队列
-                    index = index + 1
+                except:
+                    print(username,'Disconnect')
+                    index = 0
+                    for user in onlineList:
+                        if user[0] == client:
+                            onlineList.pop(index)#将此用户移除在线用户列表
+                            LOGIN_NAME_LIST = self.flushUsernames()#刷新用户名列表
+                            USER_POOL.pop(index)
+                            data = ("ALL", LOGIN_NAME_LIST, "USERNAME_LIST")
+                            self.putMsgToQue(data)#将用户名列表放入消息队列
+                        index = index + 1
+                    break
     
     def try_login(self,client_socket):
         global LOGIN_NAME_LIST
@@ -59,6 +62,7 @@ class Chat(threading.Thread):
         username = username.decode()
 
         if username:
+            print("RECV:",username)
             if len(USER_POOL) >= 16:
                 data = (client_socket, msgList.err_service_full, "SERVER_HINT")
                 self.putMsgToQue(data)
@@ -98,6 +102,7 @@ class Chat(threading.Thread):
                 message = msgque.get()
                 messageaH = {}
                 if message[2] == "SERVER_HINT":
+                    print(message)
                     messageaH = {'type':'SERVER_HINT','message':message[1]}
                     message[0].send(json.dumps(messageaH).encode())
                     continue
