@@ -20,7 +20,6 @@ class loginWindow(USERWindow.loginWindow):
             self.label_hint.setText("昵称不能为空")
             return
         self.login()
-        print("return s")
 
     def login(self):
         #password = input("Plz input ur password:")

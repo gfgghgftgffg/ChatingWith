@@ -33,6 +33,7 @@ class Chat(threading.Thread):
 
     def tcp_connect(self,client):
         while True:
+            global LOGIN_NAME_LIST
             (status,username) = self.try_login(client)
             if status == "succ":
                 try:
@@ -53,6 +54,7 @@ class Chat(threading.Thread):
                             data = ("ALL", LOGIN_NAME_LIST, "USERNAME_LIST")
                             self.putMsgToQue(data)#将用户名列表放入消息队列
                         index = index + 1
+                    break
     
     def try_login(self,client_socket):
         global LOGIN_NAME_LIST
