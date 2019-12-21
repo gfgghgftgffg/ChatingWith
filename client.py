@@ -20,6 +20,7 @@ class loginWindow(USERWindow.loginWindow):
             self.label_hint.setText("昵称不能为空")
             return
         self.login()
+        print("return s")
 
     def login(self):
         #password = input("Plz input ur password:")
@@ -27,6 +28,7 @@ class loginWindow(USERWindow.loginWindow):
         #client_socket.send(password.encode("utf8"))
         data = client_socket.recv(1024)
         data = json.loads(data.decode())
+        print("recv",data)
         if data['message'] == msgList.login_succ:
             self.label_hint.setText("ok")
             self.login_succ_signal.emit(self.text_nickname.text())
@@ -58,23 +60,23 @@ if __name__ == '__main__':
     LOGIN_WINDOW.show()
     sys.exit(app.exec_())
 
-    def recv_chating_msg(client_socket):
-        while True:
-            recv_data= client_socket.recv(1024)
-            if recv_data:
-                data = json.loads(recv_data.decode())
-                if data['type'] == 'onlineList':
-                    onlineList = data['userList']
-                    print(onlineList)
-                elif data['type'] == 'message':
-                    name = data['username']
-                    message = data['message']
-                    print(name, message, end='\n')
+def recv_chating_msg(client_socket):
+    while True:
+        recv_data= client_socket.recv(1024)
+        if recv_data:
+            data = json.loads(recv_data.decode())
+            if data['type'] == 'onlineList':
+                onlineList = data['userList']
+                print(onlineList)
+            elif data['type'] == 'message':
+                name = data['username']
+                message = data['message']
+                print(name, message, end='\n')
 
-    def send_chating_msg(client_socket):
-        while True:
-            msg_send = input("Input your msg:")#现在发送的消息不需要序列化
-            client_socket.send(json.dumps(msg_send.encode()))
+def send_chating_msg(client_socket):
+    while True:
+        msg_send = input("Input your msg:")#现在发送的消息不需要序列化
+        client_socket.send(json.dumps(msg_send.encode()))
 
     # thread_recv_msg = threading.Thread(target=recv_chating_msg, args=([client_socket]))
     # thread_send_msg = threading.Thread(target=send_chating_msg, args=([client_socket]))

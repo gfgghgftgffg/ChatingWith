@@ -32,26 +32,27 @@ class Chat(threading.Thread):
                 
 
     def tcp_connect(self,client):
-        (status,username) = self.try_login(client)
-        if status == "succ":
-            try:
-                while True:
-                    data = client.recv(1024)
-                    data = json.loads(data.decode())
-                    print('receive message',data)
-                    self.putMsgToQue(data)
+        while True:
+            (status,username) = self.try_login(client)
+            if status == "succ":
+                try:
+                    while True:
+                        data = client.recv(1024)
+                        data = json.loads(data.decode())
+                        print('receive message',data)
+                        self.putMsgToQue(data)
 
-            except:
-                print(username,'Disconnect')
-                index = 0
-                for user in onlineList:
-                    if user[0] == client:
-                        onlineList.pop(index)#将此用户移除在线用户列表
-                        LOGIN_NAME_LIST = self.flushUsernames()#刷新用户名列表
-                        USER_POOL.pop(index)
-                        data = ("ALL", LOGIN_NAME_LIST, "USERNAME_LIST")
-                        self.putMsgToQue(data)#将用户名列表放入消息队列
-                    index = index + 1
+                except:
+                    print(username,'Disconnect')
+                    index = 0
+                    for user in onlineList:
+                        if user[0] == client:
+                            onlineList.pop(index)#将此用户移除在线用户列表
+                            LOGIN_NAME_LIST = self.flushUsernames()#刷新用户名列表
+                            USER_POOL.pop(index)
+                            data = ("ALL", LOGIN_NAME_LIST, "USERNAME_LIST")
+                            self.putMsgToQue(data)#将用户名列表放入消息队列
+                        index = index + 1
     
     def try_login(self,client_socket):
         global LOGIN_NAME_LIST

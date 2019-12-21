@@ -1,6 +1,7 @@
 import socket
 import sys
 import threading
+import json
 from PyQt5 import QtCore, QtGui, QtWidgets, Qt
 import client
 from time import sleep
@@ -9,15 +10,19 @@ def recv_chating_msg(client_socket):
     while True:
         recv_data= client_socket.recv(1024)
         if recv_data:
-            data = recv_data.decode("utf8")
-            print(data)
-        else:
-            break
+            data = json.loads(recv_data.decode())
+            if data['type'] == 'onlineList':
+                onlineList = data['userList']
+                print(onlineList)
+            elif data['type'] == 'message':
+                name = data['username']
+                message = data['message']
+                print(name, message, end='\n')
 
 def send_chating_msg(client_socket):
     while True:
-        msg_send = input("Input your msg:")
-        client_socket.send(msg_send.encode("utf8"))
+        msg_send = input("Input your msg:")#现在发送的消息不需要序列化
+        client_socket.send(json.dumps(msg_send.encode()))
 
 
 #Program starts here!
