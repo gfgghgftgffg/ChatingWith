@@ -52,23 +52,28 @@ class chatWindow(USERWindow.Ui_MainWindow):
         self.lock = threading.Lock()
         self.onlineList = []
         self.listModel = QtCore.QStringListModel()
+        self.listModel_2 = QtCore.QStringListModel()
         self.sender = NICKNAME
         
 
         self.pushButton_4.clicked.connect(mainWindow.close)
         self.pushButton_4.clicked.connect(self.socket.close)
         self.pushButton_3.clicked.connect(self.send_chating_msg)
+        self.pushButton_2.clicked.connect(self.uploadFiles)
+        self.pushButton_5.clicked.connect(self.downloadFiles)
+
+        self.listView_2.doubleClicked.connect(self.downloadFiles)
         
-        # thread_send_msg = threading.Thread(target=self.send_chating_msg, args=([client_socket]))
-        # thread_send_msg.start()
     
     def run(self,nickname):
         self.sender = nickname
         self.thread_recv_msg = threading.Thread(target=self.recv_chating_msg)
         self.thread_recv_msg.start()
         self.listView.setModel(self.listModel)
-        # self.thread_display_msg = threading.Thread(target=self.display_chating_msg)
-        # self.thread_display_msg.start()
+        self.listView_2.setModel(self.listModel_2)
+
+        self.listView.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+        self.listView_2.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
     
     def send_chating_msg(self):
         data = {}
@@ -84,21 +89,68 @@ class chatWindow(USERWindow.Ui_MainWindow):
                 self.lock.acquire()
                 try:
                     data = json.loads(recv_data.decode())
-
                     if data['type'] == 'onlineList':
                         self.onlineList = data['message']
                         self.listModel.setStringList(self.onlineList)
                         #self.listView.setModel(self.listModel)
+                    elif data['type'] == 'fileList':
+                        self.fileList = data['message']
+                        self.listModel_2.setStringList(self.fileList)
                         
                     elif data['type'] == 'USER_MSG':
                         self.textBrowser.append(data['sender'] + ' (' + data['send_time'] + ')')
                         self.textBrowser.append(data['message'] + '\n')
                 finally:
                     self.lock.release()
-    
 
 
     
+    def uploadFiles(self):
+
+        file_port = 22333
+        file_tmp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        file_tmp_socket.connect(("127.0.0.1", file_port))
+        
+        file_dialog = QtWidgets.QFileDialog()
+        file_dialog.setFileMode(QtWidgets.QFileDialog.AnyFile)
+        file_dialog.setFilter(QtCore.QDir.Files)
+
+        if file_dialog.exec_():
+            filename = file_dialog.selectedFiles()
+            name = filename[0].split('/')[-1]
+
+            data = {'type':'UPLOAD','message':name}
+            file_tmp_socket.send(json.dumps(data).encode())
+            with open(filename[0], 'rb') as f:
+                while True:
+                    a = f.read(1024)
+                    if not a:
+                        break
+                    file_tmp_socket.send(a)
+                time.sleep(0.1)
+                file_tmp_socket.send('EOF'.encode())
+        file_tmp_socket.close()
+
+
+    def downloadFiles(self,index):
+
+        file_port = 22333
+        file_tmp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        file_tmp_socket.connect(("127.0.0.1", file_port))
+        
+        download_file_name = self.fileList[index.row()]
+        if(download_file_name):
+            data = {'type':'DOWNLOAD','message':download_file_name}
+            file_tmp_socket.send(json.dumps(data).encode())
+            with open(download_file_name, 'wb') as f:
+                while True:
+                    data = file_tmp_socket.recv(1024)
+                    if data == 'EOF'.encode():
+                        break
+                    f.write(data)
+        file_tmp_socket.close()
+    
+
 
 
 if __name__ == '__main__':
@@ -113,7 +165,6 @@ if __name__ == '__main__':
     
     CHAT_WINDOW = QtWidgets.QMainWindow()
     ui = chatWindow(CHAT_WINDOW, client_socket)
-    
 
     LOGIN_WINDOW.login_succ_signal.connect(LOGIN_WINDOW.close)
     LOGIN_WINDOW.login_succ_signal.connect(CHAT_WINDOW.show)

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file '.\chat_window.ui'
+# Form implementation generated from reading ui file 'chat_window.ui'
 #
 # Created by: PyQt5 UI code generator 5.13.2
 #
@@ -13,7 +13,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(1074, 868)
+        MainWindow.resize(1319, 868)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
         self.textEdit = QtWidgets.QTextEdit(self.centralwidget)
@@ -37,9 +37,15 @@ class Ui_MainWindow(object):
         self.pushButton_4 = QtWidgets.QPushButton(self.centralwidget)
         self.pushButton_4.setGeometry(QtCore.QRect(630, 760, 93, 28))
         self.pushButton_4.setObjectName("pushButton_4")
+        self.pushButton_5 = QtWidgets.QPushButton(self.centralwidget)
+        self.pushButton_5.setGeometry(QtCore.QRect(260, 560, 93, 28))
+        self.pushButton_5.setObjectName("pushButton_5")
+        self.listView_2 = QtWidgets.QListView(self.centralwidget)
+        self.listView_2.setGeometry(QtCore.QRect(1080, 20, 221, 771))
+        self.listView_2.setObjectName("listView_2")
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 1074, 26))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 1319, 26))
         self.menubar.setObjectName("menubar")
         MainWindow.setMenuBar(self.menubar)
         self.statusbar = QtWidgets.QStatusBar(MainWindow)
@@ -56,3 +62,4 @@ class Ui_MainWindow(object):
         self.pushButton_2.setText(_translate("MainWindow", "上传文件"))
         self.pushButton_3.setText(_translate("MainWindow", "发送"))
         self.pushButton_4.setText(_translate("MainWindow", "关闭"))
+        self.pushButton_5.setText(_translate("MainWindow", "下载文件"))
