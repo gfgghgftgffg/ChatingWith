@@ -39,8 +39,8 @@ class Chat(threading.Thread):
                         recv_data = client.recv(1024)
                         recv_data = json.loads(recv_data.decode())
                         if (recv_data['type'] == 'USER_MSG_ALL'):
-                            print(12)
-                            data = ("ALL", recv_data['message'], "USER_MSG")
+                            data = ("ALL", recv_data['message'], "USER_MSG", recv_data['sender'], recv_data['send_time'])
+                            print(recv_data['sender'])
                             self.putMsgToQue(data)
 
                 except:
@@ -112,7 +112,7 @@ class Chat(threading.Thread):
                     messageaH = {'type':'onlineList','message':message[1]}
             
                 elif message[2] == "USER_MSG":
-                    messageaH = {'type':'USER_MSG','message':message[1]}
+                    messageaH = {'type':'USER_MSG','message':message[1],'sender':message[3],'send_time':message[4]}
 
                 for user in onlineList:
                     try:

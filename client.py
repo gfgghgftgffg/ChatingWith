@@ -7,6 +7,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets, Qt
 import msgList
 import USERWindow
 import queue
+import time
 
 class loginWindow(USERWindow.loginWindow):
     login_succ_signal = Qt.pyqtSignal(str)
@@ -28,7 +29,6 @@ class loginWindow(USERWindow.loginWindow):
         #client_socket.send(password.encode("utf8"))
         data = client_socket.recv(1024)
         data = json.loads(data.decode())
-        print("recv",data)
         if data['message'] == msgList.login_succ:
             self.label_hint.setText("ok")
             self.login_succ_signal.emit(self.text_nickname.text())
@@ -44,6 +44,7 @@ class loginWindow(USERWindow.loginWindow):
 class chatWindow(USERWindow.Ui_MainWindow):
 
     def __init__(self,mainWindow, a_socket):
+        global NICKNAME
         super().setupUi(mainWindow)
         mainWindow.setWindowFlags(Qt.Qt.FramelessWindowHint)
         self.socket = a_socket
@@ -51,6 +52,8 @@ class chatWindow(USERWindow.Ui_MainWindow):
         self.lock = threading.Lock()
         self.onlineList = []
         self.listModel = QtCore.QStringListModel()
+        self.sender = NICKNAME
+        
 
         self.pushButton_4.clicked.connect(mainWindow.close)
         self.pushButton_4.clicked.connect(self.socket.close)
@@ -59,7 +62,8 @@ class chatWindow(USERWindow.Ui_MainWindow):
         # thread_send_msg = threading.Thread(target=self.send_chating_msg, args=([client_socket]))
         # thread_send_msg.start()
     
-    def run(self):
+    def run(self,nickname):
+        self.sender = nickname
         self.thread_recv_msg = threading.Thread(target=self.recv_chating_msg)
         self.thread_recv_msg.start()
         self.listView.setModel(self.listModel)
@@ -68,7 +72,8 @@ class chatWindow(USERWindow.Ui_MainWindow):
     
     def send_chating_msg(self):
         data = {}
-        data = {'type':'USER_MSG_ALL','message':self.textEdit.toPlainText()}
+        send_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()) 
+        data = {'type':'USER_MSG_ALL','message':self.textEdit.toPlainText(),'sender':self.sender,'send_time':send_time}
         self.socket.send(json.dumps(data).encode())
         self.textEdit.clear()
     
@@ -82,31 +87,23 @@ class chatWindow(USERWindow.Ui_MainWindow):
 
                     if data['type'] == 'onlineList':
                         self.onlineList = data['message']
-                        print(self.onlineList)
                         self.listModel.setStringList(self.onlineList)
                         #self.listView.setModel(self.listModel)
                         
-                    elif data['type'] == 'USER_MSG': 
-                        #name = data['username']
-                        new_message = data['message']
-                        print(new_message)
-                        #self.textBrowser.append(name + '\n' + message)
-                        self.textBrowser.append(new_message)
+                    elif data['type'] == 'USER_MSG':
+                        self.textBrowser.append(data['sender'] + ' (' + data['send_time'] + ')')
+                        self.textBrowser.append(data['message'] + '\n')
                 finally:
                     self.lock.release()
     
-    
 
-
-
-#Program starts here!
-SERVER_ADDR = ("127.0.0.1", 7799)
-NICKNAME = ""
 
     
 
 
 if __name__ == '__main__':
+    SERVER_ADDR = ("127.0.0.1", 7799)
+    NICKNAME = ""
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     client_socket.connect(SERVER_ADDR)
     
@@ -120,6 +117,6 @@ if __name__ == '__main__':
 
     LOGIN_WINDOW.login_succ_signal.connect(LOGIN_WINDOW.close)
     LOGIN_WINDOW.login_succ_signal.connect(CHAT_WINDOW.show)
-    LOGIN_WINDOW.login_succ_signal.connect(ui.run)
+    LOGIN_WINDOW.login_succ_signal.connect(lambda nickname:ui.run(nickname))
     LOGIN_WINDOW.show()
     sys.exit(app.exec_())
