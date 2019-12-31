@@ -4,13 +4,12 @@ import msgList
 import queue
 import json
 
-LOGIN_NAME_LIST = []
 USER_POOL = []
 onlineList = []
 LOGIN_NAME_LIST = []#only login nickname
 lock = threading.Lock()
 msgque = queue.Queue()#msg queue
-port = 7798
+port = 7799
 
 
 class Chat(threading.Thread):
@@ -33,15 +32,16 @@ class Chat(threading.Thread):
 
     def tcp_connect(self,client):
         while True:
-            global LOGIN_NAME_LIST
             (status,username) = self.try_login(client)
             if status == "succ":
                 try:
                     while True:
-                        data = client.recv(1024)
-                        data = json.loads(data.decode())
-                        print('receive message',data)
-                        self.putMsgToQue(data)
+                        recv_data = client.recv(1024)
+                        recv_data = json.loads(recv_data.decode())
+                        if (recv_data['type'] == 'USER_MSG_ALL'):
+                            print(12)
+                            data = ("ALL", recv_data['message'], "USER_MSG")
+                            self.putMsgToQue(data)
 
                 except:
                     print(username,'Disconnect')
@@ -77,7 +77,7 @@ class Chat(threading.Thread):
                 LOGIN_NAME_LIST = self.flushUsernames()
                 data = (client_socket, msgList.login_succ, "SERVER_HINT")
                 self.putMsgToQue(data)
-                data = (client_socket,LOGIN_NAME_LIST,"USERNAME_LIST")
+                data = ("ALL",LOGIN_NAME_LIST,"USERNAME_LIST")
                 self.putMsgToQue(data)
                 return ("succ",username)
     
@@ -88,7 +88,7 @@ class Chat(threading.Thread):
             LOGIN_NAME_LIST.append(i[1])
         return LOGIN_NAME_LIST
 
-    def putMsgToQue(self,msg): #将消息和ip以及端口填入队列
+    def putMsgToQue(self,msg):
         lock.acquire()
         try:
             msgque.put(msg)
@@ -97,18 +97,26 @@ class Chat(threading.Thread):
 
     #send msg while msg_queue not empty
     def senddata(self):
+        messageaH = {}
         while True:
             if not msgque.empty():
                 message = msgque.get()
-                messageaH = {}
                 if message[2] == "SERVER_HINT":
                     print(message)
                     messageaH = {'type':'SERVER_HINT','message':message[1]}
                     message[0].send(json.dumps(messageaH).encode())
                     continue
+                
+                elif message[2] == "USERNAME_LIST":
+                    print(message)
+                    messageaH = {'type':'onlineList','message':message[1]}
+            
+                elif message[2] == "USER_MSG":
+                    messageaH = {'type':'USER_MSG','message':message[1]}
 
                 for user in onlineList:
                     try:
+                        print(messageaH)
                         if message[0] == "ALL":
                             user[0].send(json.dumps(messageaH).encode())
                         else:
