@@ -137,12 +137,15 @@ class chatWindow(USERWindow.Ui_MainWindow):
         file_port = 22333
         file_tmp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         file_tmp_socket.connect(("127.0.0.1", file_port))
+
         
         download_file_name = self.fileList[index.row()]
+        download_path = QtWidgets.QFileDialog.getExistingDirectory(None,"Download To","C:/")
+        download_full_path = download_path + "\\" + download_file_name
         if(download_file_name):
             data = {'type':'DOWNLOAD','message':download_file_name}
             file_tmp_socket.send(json.dumps(data).encode())
-            with open(download_file_name, 'wb') as f:
+            with open(download_full_path, 'wb') as f:
                 while True:
                     data = file_tmp_socket.recv(1024)
                     if data == 'EOF'.encode():
