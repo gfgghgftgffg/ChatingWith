@@ -42,10 +42,32 @@ class Chat(threading.Thread):
                     while True:
                         recv_data = client.recv(1024)
                         recv_data = json.loads(recv_data.decode())
+                        
                         if (recv_data['type'] == 'USER_MSG_ALL'):
                             data = ("ALL", recv_data['message'], "USER_MSG", recv_data['sender'], recv_data['send_time'])
                             print(recv_data['sender'])
                             self.putMsgToQue(data)
+
+                        elif (recv_data['type'] == 'USER_PIC_ALL'):
+                            print(recv_data['sender'])
+
+                            imgdata = client.recv(40960000)
+                            data = ("ALL", imgdata, "USER_PIC", recv_data['sender'], recv_data['send_time'])
+                            self.putMsgToQue(data)
+
+                        elif (recv_data['type'] == 'USER_MSG_PRI'):
+                            data = ("PRI", recv_data['message'], "USER_MSG", recv_data['sender'], recv_data['send_time'],recv_data['tolist'])
+                            print(recv_data['sender'])
+                            self.putMsgToQue(data)
+
+                        elif (recv_data['type'] == 'USER_PIC_PRI'):
+                            print(recv_data['sender'])
+
+                            imgdata = client.recv(40960000)
+                            data = ("PRI", imgdata, "USER_PIC", recv_data['sender'], recv_data['send_time'],recv_data['tolist'])
+                            self.putMsgToQue(data)
+
+
 
                 except:
                     print(username,'Disconnect')
@@ -60,7 +82,9 @@ class Chat(threading.Thread):
                             self.putMsgToQue(data)#将用户名列表放入消息队列
                         index = index + 1
                     break
-    
+
+
+
     def try_login(self,client_socket):
         global LOGIN_NAME_LIST
         username = client_socket.recv(1024)
@@ -127,13 +151,30 @@ class Chat(threading.Thread):
                 elif message[2] == "USER_MSG":
                     messageaH = {'type':'USER_MSG','message':message[1],'sender':message[3],'send_time':message[4]}
 
+                elif message[2] == "USER_PIC":
+                    messageaH = {'type':'USER_PIC','sender':message[3],'send_time':message[4]}
+
                 for user in onlineList:
                     try:
                         print(messageaH)
                         if message[0] == "ALL":
-                            user[0].send(json.dumps(messageaH).encode())
+
+                            if message[2] == "USER_PIC":
+                                user[0].send(json.dumps(messageaH).encode())
+                                user[0].sendall(message[1])
+
+                            else:
+                                user[0].send(json.dumps(messageaH).encode())
+                                
                         else:
-                            user[0].send(json.dumps(messageaH).encode())
+                            if user[1] in message[-1] or user[1] == message[3]:
+
+                                if message[2] == "USER_PIC":
+                                    user[0].send(json.dumps(messageaH).encode())
+                                    user[0].sendall(message[1])
+
+                                else:
+                                    user[0].send(json.dumps(messageaH).encode())
                     except:
                         print('no user or message to send')
 
