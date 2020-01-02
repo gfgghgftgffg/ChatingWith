@@ -46,7 +46,7 @@ class chatWindow(USERWindow.Ui_MainWindow):
     def __init__(self,mainWindow, a_socket):
         global NICKNAME
         super().setupUi(mainWindow)
-        mainWindow.setWindowFlags(Qt.Qt.FramelessWindowHint)
+        #mainWindow.setWindowFlags(Qt.Qt.FramelessWindowHint)
         self.socket = a_socket
         self.msgque = queue.Queue()
         self.lock = threading.Lock()
@@ -61,7 +61,7 @@ class chatWindow(USERWindow.Ui_MainWindow):
         self.pushButton_3.clicked.connect(self.send_chating_msg)
         self.pushButton_2.clicked.connect(self.uploadFiles)
         self.pushButton_5.clicked.connect(self.downloadFiles)
-        self.pushButton_6.clicked.connect(self.send_chating_pic)
+        self.pushButton.clicked.connect(self.send_chating_pic)
 
         self.listView_2.doubleClicked.connect(self.downloadFiles)
         
@@ -139,11 +139,8 @@ class chatWindow(USERWindow.Ui_MainWindow):
 
                     elif data['type'] == 'USER_PIC':
                         self.textBrowser.append(data['sender'] + ' (' + data['send_time'] + ')')
-                        
-                        imgdata = self.socket.recv(40960000)
-                        #self.textBrowser.append(imgdata + '\n')
-                        self.textBrowser.paintingActive()
-                        self.textBrowser.append(str(imgdata))
+                        self.textBrowser.append('<img src=%s>' % data['message'])
+                        self.textBrowser.append('\n')
                 finally:
                     self.lock.release()
 
