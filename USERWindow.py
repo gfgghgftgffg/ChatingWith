@@ -24,9 +24,9 @@ class loginWindow(QtWidgets.QWidget):
         label_1 = QtWidgets.QLabel(self)
         label_1.setText("昵称")
         label_1.move(size.width() * 2 / 10, size.height() * 1 / 10)
-        label_2 = QtWidgets.QLabel(self)
-        label_2.setText("性别")
-        label_2.move(size.width() * 2 / 10, size.height() * 2 / 10)
+        #label_2 = QtWidgets.QLabel(self)
+        #label_2.setText("性别")
+        #label_2.move(size.width() * 2 / 10, size.height() * 2 / 10)
         label_3 = QtWidgets.QLabel(self)
         pic_size = min(size.width(),size.height()) * 2 / 5
         label_3.setPixmap(QtGui.QPixmap("./Image/Icon.png").scaled(pic_size, pic_size, aspectRatioMode=QtCore.Qt.KeepAspectRatio))
@@ -117,9 +117,10 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
-        self.pushButton.setText(_translate("MainWindow", "表情"))
+        MainWindow.setWindowTitle(_translate("MainWindow", "聊天室"))
+        self.pushButton.setText(_translate("MainWindow", "发送图片"))
         self.pushButton_2.setText(_translate("MainWindow", "上传文件"))
         self.pushButton_3.setText(_translate("MainWindow", "发送"))
         self.pushButton_4.setText(_translate("MainWindow", "关闭"))
         self.pushButton_5.setText(_translate("MainWindow", "下载文件"))
+

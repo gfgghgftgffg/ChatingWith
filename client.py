@@ -46,7 +46,7 @@ class chatWindow(USERWindow.Ui_MainWindow):
     def __init__(self,mainWindow, a_socket):
         global NICKNAME
         super().setupUi(mainWindow)
-        mainWindow.setWindowFlags(Qt.Qt.FramelessWindowHint)
+        #mainWindow.setWindowFlags(Qt.Qt.FramelessWindowHint)
         self.socket = a_socket
         self.msgque = queue.Queue()
         self.lock = threading.Lock()
@@ -61,6 +61,7 @@ class chatWindow(USERWindow.Ui_MainWindow):
         self.pushButton_3.clicked.connect(self.send_chating_msg)
         self.pushButton_2.clicked.connect(self.uploadFiles)
         self.pushButton_5.clicked.connect(self.downloadFiles)
+        self.pushButton.clicked.connect(self.send_chating_pic)
 
         self.listView_2.doubleClicked.connect(self.downloadFiles)
         
@@ -73,15 +74,50 @@ class chatWindow(USERWindow.Ui_MainWindow):
         self.listView_2.setModel(self.listModel_2)
 
         self.listView.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+        self.listView.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
+
         self.listView_2.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
     
     def send_chating_msg(self):
+        tolist = []
+        for i in self.listView.selectedIndexes():
+            tolist.append(i.data())
+        if len(tolist) == 0:
+            totype = 'USER_MSG_ALL'
+        else:
+            totype = 'USER_MSG_PRI'
+
         data = {}
         send_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()) 
-        data = {'type':'USER_MSG_ALL','message':self.textEdit.toPlainText(),'sender':self.sender,'send_time':send_time}
+        data = {'type':totype,'message':self.textEdit.toPlainText(),'sender':self.sender,'send_time':send_time,'tolist':tolist}
         self.socket.send(json.dumps(data).encode())
         self.textEdit.clear()
-    
+
+
+    def send_chating_pic(self):
+
+        tolist = []
+        for i in self.listView.selectedIndexes():
+            tolist.append(i.data())
+        if len(tolist) == 0:
+            totype = 'USER_PIC_ALL'
+        else:
+            totype = 'USER_PIC_PRI'
+
+        data = {}
+        send_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+        imgName, imgType = QtWidgets.QFileDialog.getOpenFileName(None, "选择图片", "", "*.jpg;;*.png;;All Files(*)")
+
+        with open(imgName, 'rb') as f:
+            bytes = f.read()
+
+        data = {'type':totype,'sender':self.sender,'send_time':send_time,'tolist':tolist}
+        self.socket.send(json.dumps(data).encode())
+
+        self.socket.sendall(bytes)
+        
+
+
     def recv_chating_msg(self):
         while True:
             recv_data= self.socket.recv(1024)
@@ -100,6 +136,11 @@ class chatWindow(USERWindow.Ui_MainWindow):
                     elif data['type'] == 'USER_MSG':
                         self.textBrowser.append(data['sender'] + ' (' + data['send_time'] + ')')
                         self.textBrowser.append(data['message'] + '\n')
+
+                    elif data['type'] == 'USER_PIC':
+                        self.textBrowser.append(data['sender'] + ' (' + data['send_time'] + ')')
+                        self.textBrowser.append('<img src=%s>' % data['message'])
+                        self.textBrowser.append('\n')
                 finally:
                     self.lock.release()
 
@@ -137,15 +178,12 @@ class chatWindow(USERWindow.Ui_MainWindow):
         file_port = 22333
         file_tmp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         file_tmp_socket.connect(("127.0.0.1", file_port))
-
         
         download_file_name = self.fileList[index.row()]
-        download_path = QtWidgets.QFileDialog.getExistingDirectory(None,"Download To","C:/")
-        download_full_path = download_path + "\\" + download_file_name
         if(download_file_name):
             data = {'type':'DOWNLOAD','message':download_file_name}
             file_tmp_socket.send(json.dumps(data).encode())
-            with open(download_full_path, 'wb') as f:
+            with open(download_file_name, 'wb') as f:
                 while True:
                     data = file_tmp_socket.recv(1024)
                     if data == 'EOF'.encode():
