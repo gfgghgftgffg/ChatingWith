@@ -45,8 +45,9 @@ class loginWindow(QtWidgets.QWidget):
         #button_2.setEnabled(False)
 
         self.label_hint = QtWidgets.QLabel(self)
-        self.label_hint.setText("12333")
-        self.label_hint.move(size.width() * 9 / 20, size.height() * 9 / 10)
+        self.label_hint.setText("--------欢迎来到聊天室--------")
+        self.label_hint.setScaledContents (True)
+        self.label_hint.move(size.width() * 6 / 20, size.height() * 9 / 10)
 
         button_1.clicked.connect(self.close)
         button_2.clicked.connect(self.submit)
@@ -122,5 +123,5 @@ class Ui_MainWindow(object):
         self.pushButton_2.setText(_translate("MainWindow", "上传文件"))
         self.pushButton_3.setText(_translate("MainWindow", "发送"))
         self.pushButton_4.setText(_translate("MainWindow", "关闭"))
-        self.pushButton_5.setText(_translate("MainWindow", "下载文件"))
+        self.pushButton_5.setText(_translate("MainWindow", "刷新文件"))
 
