@@ -31,7 +31,7 @@ class Chat(threading.Thread):
         while True:
             client,clientSock = self.socket.accept()
             t = threading.Thread(target=self.tcp_connect,args=[client])
-            USER_POOL.append(t)#客户加入线程池
+            USER_POOL.append(t)#加入线程池
             t.start()
                 
 
@@ -80,6 +80,13 @@ class Chat(threading.Thread):
 
                             data = ("PRI", picname, "USER_PIC", recv_data['sender'], recv_data['send_time'],recv_data['tolist'])
                             self.putMsgToQue(data)
+                        
+                        elif (recv_data['type'] == 'NEW_FILE_LIST'):
+                            listdir = os.listdir(os.getcwd())
+                            data = ("ALL",listdir,"FILE_LIST")
+                            self.file_list = listdir
+                            self.putMsgToQue(data)
+
 
 
 
@@ -89,11 +96,11 @@ class Chat(threading.Thread):
                     for user in onlineList:
                         if user[0] == client:
                             global LOGIN_NAME_LIST
-                            onlineList.pop(index)#将此用户移除在线用户列表
-                            LOGIN_NAME_LIST = self.flushUsernames()#刷新用户名列表
+                            onlineList.pop(index)
+                            LOGIN_NAME_LIST = self.flushUsernames()
                             USER_POOL.pop(index)
                             data = ("ALL", LOGIN_NAME_LIST, "USERNAME_LIST")
-                            self.putMsgToQue(data)#将用户名列表放入消息队列
+                            self.putMsgToQue(data)
                         index = index + 1
                     break
 
@@ -127,6 +134,7 @@ class Chat(threading.Thread):
                 time.sleep(0.2)
                 listdir = os.listdir(os.getcwd())
                 data = ("ALL",listdir,"FILE_LIST")
+                self.file_list = listdir
                 self.putMsgToQue(data)
 
                 return ("succ",username)
@@ -220,16 +228,14 @@ class FileServer(threading.Thread):
         elif order == 'UPLOAD':
             fileName = r'./' + message
             return self.recvFile(fileName, client)
-        elif order == 'REQUEST_FILE_LIST':
-            pass
     
     def recvFile(self, file_path, client):
-            with open(file_path, 'wb') as f:
-                while True:
-                    data = client.recv(1024)
-                    if data == 'EOF'.encode():
-                        break
-                    f.write(data)
+        with open(file_path, 'wb') as f:
+            while True:
+                data = client.recv(1024)
+                if data == 'EOF'.encode():
+                    break
+                f.write(data)
     
     def sendFile(self, fileName, client):
         f = open(fileName, 'rb')

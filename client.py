@@ -19,7 +19,7 @@ class loginWindow(USERWindow.loginWindow):
     
     def submit(self):
         if len(self.text_nickname.text()) == 0:
-            self.label_hint.setText("昵称不能为空")
+            self.label_hint.setText("        昵称不能为空")
             return
         self.login()
 
@@ -33,9 +33,9 @@ class loginWindow(USERWindow.loginWindow):
             self.label_hint.setText("ok")
             self.login_succ_signal.emit(self.text_nickname.text())
         elif data['message'] == msgList.err_service_full:
-            self.label_hint.setText("服务器满")
+            self.label_hint.setText("        服务器满")
         elif data['message'] == msgList.err_existedNickName:
-            self.label_hint.setText("昵称已存在")
+            self.label_hint.setText("         昵称已存在")
 
     def logout(self):
         self.socket.close()
@@ -47,6 +47,7 @@ class chatWindow(USERWindow.Ui_MainWindow):
         global NICKNAME
         super().setupUi(mainWindow)
         #mainWindow.setWindowFlags(Qt.Qt.FramelessWindowHint)
+        mainWindow.setFixedSize(mainWindow.width(), mainWindow.height())
         self.socket = a_socket
         self.msgque = queue.Queue()
         self.lock = threading.Lock()
@@ -60,7 +61,7 @@ class chatWindow(USERWindow.Ui_MainWindow):
         self.pushButton_4.clicked.connect(self.socket.close)
         self.pushButton_3.clicked.connect(self.send_chating_msg)
         self.pushButton_2.clicked.connect(self.uploadFiles)
-        self.pushButton_5.clicked.connect(self.downloadFiles)
+        self.pushButton_5.clicked.connect(self.flushDownloadFiles)
         self.pushButton.clicked.connect(self.send_chating_pic)
 
         self.listView_2.doubleClicked.connect(self.downloadFiles)
@@ -77,6 +78,7 @@ class chatWindow(USERWindow.Ui_MainWindow):
         self.listView.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
 
         self.listView_2.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+
     
     def send_chating_msg(self):
         tolist = []
@@ -110,7 +112,6 @@ class chatWindow(USERWindow.Ui_MainWindow):
 
         with open(imgName, 'rb') as f:
             bytes = f.read()
-
         data = {'type':totype,'sender':self.sender,'send_time':send_time,'tolist':tolist}
         self.socket.send(json.dumps(data).encode())
 
@@ -178,18 +179,26 @@ class chatWindow(USERWindow.Ui_MainWindow):
         file_port = 22333
         file_tmp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         file_tmp_socket.connect(("127.0.0.1", file_port))
+
         
         download_file_name = self.fileList[index.row()]
+        download_path = QtWidgets.QFileDialog.getExistingDirectory(None,"Download To","C:/")
+        download_full_path = download_path + "\\" + download_file_name
         if(download_file_name):
             data = {'type':'DOWNLOAD','message':download_file_name}
             file_tmp_socket.send(json.dumps(data).encode())
-            with open(download_file_name, 'wb') as f:
+            with open(download_full_path, 'wb') as f:
                 while True:
                     data = file_tmp_socket.recv(1024)
                     if data == 'EOF'.encode():
                         break
                     f.write(data)
         file_tmp_socket.close()
+    
+    def flushDownloadFiles(self):
+        data = {'type':'NEW_FILE_LIST','message':''}
+        self.socket.send(json.dumps(data).encode())
+
     
 
 
