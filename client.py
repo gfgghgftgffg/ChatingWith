@@ -8,6 +8,8 @@ import msgList
 import USERWindow
 import queue
 import time
+import os
+import uuid
 
 class loginWindow(USERWindow.loginWindow):
     login_succ_signal = Qt.pyqtSignal(str)
@@ -140,8 +142,13 @@ class chatWindow(USERWindow.Ui_MainWindow):
                         self.textBrowser.append(data['message'] + '\n')
 
                     elif data['type'] == 'USER_PIC':
+                        imgdata = self.socket.recv(40960000)
+                        path = os.getcwd() + '\\' + 'ClientPicCache' + '\\' + str(uuid.uuid4()) + data['pictype']
+                        with open(path,'wb') as f:
+                            f.write(imgdata)
+
                         self.textBrowser.append(data['sender'] + ' (' + data['send_time'] + ')')
-                        self.textBrowser.append('<img src=%s>' % data['message'])
+                        self.textBrowser.append('<img src=%s>' % path)
                         self.textBrowser.append('\n')
                 finally:
                     self.lock.release()

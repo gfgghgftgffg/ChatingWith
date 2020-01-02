@@ -54,16 +54,16 @@ class Chat(threading.Thread):
 
                             imgdata = client.recv(40960000)
                             path = os.path.abspath(os.path.dirname(os.getcwd()))
-                            path = path + '\\' + 'PicCache'
+                            path = path + '\\' + 'ServerPicCache'
                             picname = path + '\\' + str(uuid.uuid4()) + recv_data['pictype']
                             with open(picname,'wb') as f:
                                 f.write(imgdata)
 
-                            data = ("ALL", picname, "USER_PIC", recv_data['sender'], recv_data['send_time'])
+                            data = ("ALL", imgdata, "USER_PIC", recv_data['sender'], recv_data['send_time'], recv_data['pictype'])
                             self.putMsgToQue(data)
 
                         elif (recv_data['type'] == 'USER_MSG_PRI'):
-                            data = ("PRI", recv_data['message'], "USER_MSG", recv_data['sender'], recv_data['send_time'],recv_data['tolist'])
+                            data = ("PRI", recv_data['message'], "USER_MSG", recv_data['sender'], recv_data['send_time'], recv_data['tolist'])
                             print(recv_data['sender'])
                             self.putMsgToQue(data)
 
@@ -73,12 +73,12 @@ class Chat(threading.Thread):
                             imgdata = client.recv(40960000)
 
                             path = os.path.abspath(os.path.dirname(os.getcwd()))
-                            path = path + '\\' + 'PicCache'
+                            path = path + '\\' + 'ServerPicCache'
                             picname = path + '\\' + str(uuid.uuid4()) + recv_data['pictype']
                             with open(picname,'wb') as f:
                                 f.write(imgdata)
 
-                            data = ("PRI", picname, "USER_PIC", recv_data['sender'], recv_data['send_time'],recv_data['tolist'])
+                            data = ("PRI", imgdata, "USER_PIC", recv_data['sender'], recv_data['send_time'], recv_data['pictype'], recv_data['tolist'])
                             self.putMsgToQue(data)
                         
                         elif (recv_data['type'] == 'NEW_FILE_LIST'):
@@ -171,16 +171,22 @@ class Chat(threading.Thread):
                     messageaH = {'type':'fileList','message':message[1]}
             
                 elif message[2] == "USER_MSG":
-                    messageaH = {'type':'USER_MSG','message':message[1],'sender':message[3],'send_time':message[4]}
+                    messageaH = {'type':'USER_MSG','sender':message[3],'send_time':message[4]}
 
                 elif message[2] == "USER_PIC":
-                    messageaH = {'type':'USER_PIC','message':message[1],'sender':message[3],'send_time':message[4]}
+                    messageaH = {'type':'USER_PIC','sender':message[3],'send_time':message[4],'pictype':message[5]}
 
                 print(message[0],messageaH)
 
                 if message[0] == "ALL":
-                    for user in onlineList:
-                        user[0].send(json.dumps(messageaH).encode())
+                    if message[2] == "USER_PIC":
+                        for user in onlineList:
+                            user[0].send(json.dumps(messageaH).encode())
+                            user[0].sendall(message[1])
+
+                    else:
+                        for user in onlineList:
+                            user[0].send(json.dumps(messageaH).encode())                        
                         
                 else:
                     messageaH['sender'] += '发送给 '
@@ -188,9 +194,16 @@ class Chat(threading.Thread):
                         messageaH['sender'] = messageaH['sender'] + touser + ' ' 
                     messageaH['sender'] += '的私信'
 
-                    for user in onlineList:
-                        if user[1] in message[-1] or user[1] == message[3]:
-                            user[0].send(json.dumps(messageaH).encode())
+                    if message[2] == "USER_PIC":
+                        for user in onlineList:
+                            if user[1] in message[-1] or user[1] == message[3]:
+                                user[0].send(json.dumps(messageaH).encode())
+                                user[0].sendall(message[1])
+
+                    else:
+                        for user in onlineList:
+                            if user[1] in message[-1] or user[1] == message[3]:
+                                user[0].send(json.dumps(messageaH).encode())
 
 
 
