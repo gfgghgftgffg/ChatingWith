@@ -55,7 +55,7 @@ class Chat(threading.Thread):
                             imgdata = client.recv(40960000)
                             path = os.path.abspath(os.path.dirname(os.getcwd()))
                             path = path + '\\' + 'PicCache'
-                            picname = path + '\\' + str(uuid.uuid4()) +'.jpg'
+                            picname = path + '\\' + str(uuid.uuid4()) + recv_data['pictype']
                             with open(picname,'wb') as f:
                                 f.write(imgdata)
 
@@ -74,7 +74,7 @@ class Chat(threading.Thread):
 
                             path = os.path.abspath(os.path.dirname(os.getcwd()))
                             path = path + '\\' + 'PicCache'
-                            picname = path + '\\' + str(uuid.uuid4()) +'.jpg'
+                            picname = path + '\\' + str(uuid.uuid4()) + recv_data['pictype']
                             with open(picname,'wb') as f:
                                 f.write(imgdata)
 

@@ -111,7 +111,7 @@ class chatWindow(USERWindow.Ui_MainWindow):
         with open(imgName, 'rb') as f:
             bytes = f.read()
 
-        data = {'type':totype,'sender':self.sender,'send_time':send_time,'tolist':tolist}
+        data = {'type':totype,'sender':self.sender,'send_time':send_time,'pictype':imgType[1:],'tolist':tolist}
         self.socket.send(json.dumps(data).encode())
 
         self.socket.sendall(bytes)
