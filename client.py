@@ -69,8 +69,9 @@ class chatWindow(USERWindow.Ui_MainWindow):
         self.listView_2.doubleClicked.connect(self.downloadFiles)
         
     
-    def run(self,nickname):
+    def run(self,mainWindow, nickname):
         self.sender = nickname
+        mainWindow.setWindowTitle("ChatingWith:" + self.sender)
         self.thread_recv_msg = threading.Thread(target=self.recv_chating_msg)
         self.thread_recv_msg.start()
         self.listView.setModel(self.listModel)
@@ -226,6 +227,6 @@ if __name__ == '__main__':
 
     LOGIN_WINDOW.login_succ_signal.connect(LOGIN_WINDOW.close)
     LOGIN_WINDOW.login_succ_signal.connect(CHAT_WINDOW.show)
-    LOGIN_WINDOW.login_succ_signal.connect(lambda nickname:ui.run(nickname))
+    LOGIN_WINDOW.login_succ_signal.connect(lambda nickname:ui.run(CHAT_WINDOW, nickname))
     LOGIN_WINDOW.show()
     sys.exit(app.exec_())

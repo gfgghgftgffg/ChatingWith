@@ -1,0 +1,98 @@
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: 
+// 
+// Create Date: 2019/11/26 22:48:42
+// Design Name: 
+// Module Name: hazard
+// Project Name: 
+// Target Devices: 
+// Tool Versions: 
+// Description: 
+// 
+// Dependencies: 
+// 
+// Revision:
+// Revision 0.01 - File Created
+// Additional Comments:
+// 
+//////////////////////////////////////////////////////////////////////////////////
+
+
+module hazard(
+    //fetch stage
+    output stallF,flushF,
+    //decode stage
+    input [4:0] rsD,rtD,
+    input branchD,
+    input jumpD,jalD,jrD,balD,
+    output reg forwardaD,forwardbD,
+    output stallD,flushD,
+    output branchFlushD,
+    //execute stage
+    input [4:0] rsE,rtE,
+    input [4:0] writeregE,
+    input regwriteE,
+    input memtoregE,
+    input stall_divE,
+    input hilo_rE,
+    output reg [1:0] forwardaE,forwardbE,
+    output stallE,flushE,
+    output forwardhiloE,
+    input cp0_wM,
+    input [4:0] rdE,
+    output forwardcp0E,
+    //mem stage
+    input [4:0] writeregM,
+    input regwriteM,
+    input memtoregM,
+    output stallM,
+    input [31:0] excepttypeM,
+    output flushM,
+    //write back stage
+    input [4:0] writeregW,
+    input regwriteW,
+    input hilo_wM
+    );
+    wire lwstall,branchstall,jrstall,flush_except;
+    
+    always @(*) begin
+        if((rsE != 0) && (rsE == writeregM) && regwriteM) forwardaE = 2'b10;
+        else if ((rsE != 0) && (rsE == writeregW) && regwriteW) forwardaE = 2'b01;
+        else forwardaE = 2'b00;
+    end
+    
+    always @(*) begin
+            if((rtE != 0) && (rtE == writeregM) && regwriteM) forwardbE = 2'b10;
+            else if ((rtE != 0) && (rtE == writeregW) && regwriteW) forwardbE = 2'b01;
+            else forwardbE = 2'b00;
+        end
+    
+    always @(*) begin
+        forwardaD = (rsD !=0) & (rsD == writeregM) & regwriteM;
+        forwardbD = (rtD !=0) & (rtD == writeregM) & regwriteM;
+    end
+    
+    assign lwstall = ((rsD==rtE) | (rtD==rtE)) & memtoregE;
+    assign jrstall = (jrD && regwriteE && writeregE==rsD) || (jrD && memtoregM && writeregM==rsD);
+    assign branchstall = branchD & regwriteE & (writeregE == rsD | writeregE == rtD) |
+                  branchD & memtoregM & (writeregM == rsD | writeregM == rtD);
+    
+    assign flush_except = (excepttypeM != 32'b0);
+    wire div_stall;
+    assign div_stall = flush_except ? 1'b0 : stall_divE;
+    
+    assign #1 stallF = lwstall | branchstall | jrstall | stall_divE;
+    assign #1 stallD = lwstall | branchstall | jrstall | stall_divE;
+    assign flushF = flush_except;
+    assign #1 flushD = lwstall | flush_except;
+    assign #1 flushE = lwstall | jrstall | flush_except | branchstall;
+    assign flushM = flush_except;
+    assign #1 stallE = stall_divE;
+    assign #1 stallM = stall_divE;
+ 
+    assign branchFlushD = branchD & !balD;
+    assign forwardhiloE = hilo_rE & hilo_wM;
+    assign forwardcp0E = cp0_wM && (writeregM == rdE);
+endmodule

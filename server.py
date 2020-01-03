@@ -171,7 +171,7 @@ class Chat(threading.Thread):
                     messageaH = {'type':'fileList','message':message[1]}
             
                 elif message[2] == "USER_MSG":
-                    messageaH = {'type':'USER_MSG','sender':message[3],'send_time':message[4]}
+                    messageaH = {'type':'USER_MSG','message':message[1],'sender':message[3],'send_time':message[4]}
 
                 elif message[2] == "USER_PIC":
                     messageaH = {'type':'USER_PIC','sender':message[3],'send_time':message[4],'pictype':message[5]}
